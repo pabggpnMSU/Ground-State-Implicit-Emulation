@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import ast
 import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
 
 
 data_train = pd.read_csv('gpe_train_data.csv')
@@ -183,3 +185,63 @@ def get_contours(q_diff, q, q_fixed, kappa_diff, kappa, kappa_fixed, sigma_diff,
         variable_sigma_static_kappa.append(get_variable_evs(df, q_diff[i]*np.ones(n_points), sigma, kappa_fixed, n_dim, n_ev, H_type)) # kappa=1.75
 
     return variable_q_static_sigma, variable_kappa_static_sigma, variable_sigma_static_q, variable_kappa_static_q, variable_q_static_kappa, variable_sigma_static_kappa
+
+
+def plot_high_error_regions(params, error, cutoffs):
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter3d(
+        x=params[0],
+        y=params[1],
+        z=params[2],
+        mode='markers',
+        name=f'Error <= {cutoffs[0]}%', # Text for the legend
+        marker=dict(
+            size=6,
+            color='blue', # Distinctive color
+            opacity=0.9,
+            line=dict(width=1, color='DarkSlateGrey') # Marker border for clarity
+        )
+    ))
+
+    num_bins = len(cutoffs)-1
+    for i in range(num_bins):
+        lower_bound = cutoffs[i]
+        upper_bound = cutoffs[i+1]
+        colors = px.colors.sample_colorscale('Viridis', [n/(num_bins-1) for n in range(num_bins)])
+
+        if upper_bound == np.inf:
+            label = f"Error >= {lower_bound}"
+        else:
+            label = f"{lower_bound} <= Error < {upper_bound}"
+        
+        # Create a boolean mask to find exactly which points belong in this error bin
+        mask = (error >= lower_bound) & (error < upper_bound)
+        
+        # Filter the parameter array using the mask
+        filtered_params = params[:,mask]
+
+        fig.add_trace(go.Scatter3d(
+            x=filtered_params[0],
+            y=filtered_params[1],
+            z=filtered_params[2],
+            mode='markers',
+            name=f'{label}', # Text for the legend
+            marker=dict(
+                size=6,
+                color=colors[i], # Distinctive color
+                opacity=0.9,
+                line=dict(width=1, color='DarkSlateGrey') # Marker border for clarity
+            )
+        ))
+
+    fig.update_layout(
+        title='Prediction Error',
+        scene=dict(
+            xaxis_title='kappa',
+            yaxis_title='q',
+            zaxis_title='sigma'
+        )
+    )
+
+    fig.show()
