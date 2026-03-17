@@ -186,6 +186,57 @@ def get_contours(q_diff, q, q_fixed, kappa_diff, kappa, kappa_fixed, sigma_diff,
 
     return variable_q_static_sigma, variable_kappa_static_sigma, variable_sigma_static_q, variable_kappa_static_q, variable_q_static_kappa, variable_sigma_static_kappa
 
+def plot_contours(df, variable_array, kappa, sigma, q, variable, static, plot_name):
+    fig = plt.figure(figsize=(12,8))
+    if variable == 'q' and static == 'sigma':
+        for i in range(len(variable_array)):
+            mask = (df['sigma'] == sigma) & (df['q'] == q[i])
+            plt.plot(kappa, variable_array[i][:,1]+mean_e, label=rf'$q={q[i]}$')
+            plt.scatter(df['kappa'][mask], df['E'][mask])
+        plt.xlabel(rf'$\kappa$')
+        plt.title(rf'$\sigma={sigma}$')
+    elif variable == 'q' and static == 'kappa':
+        for i in range(len(variable_array)):
+            mask = (df['kappa'] == kappa) & (df['q'] == q[i])
+            plt.plot(sigma, variable_array[i][:,1]+mean_e, label=rf'$q={q[i]}$')
+            plt.scatter(df['sigma'][mask], df['E'][mask])
+        plt.xlabel(rf'$\sigma$')
+        plt.title(rf'$\kappa={kappa}$')
+
+    elif variable == 'sigma' and static == 'kappa':
+        for i in range(len(variable_array)):
+            plt.plot(q, variable_array[i][:,1]+mean_e, label=rf'$\sigma={sigma[i]}$')
+            mask = (df['kappa'] == 1.75) & (df['sigma'] == sigma[i])
+            plt.scatter(df['q'][mask], df['E'][mask])
+        plt.xlabel(rf'$q$')
+        plt.title(rf'$\kappa={kappa}$')
+    elif variable == 'sigma' and static == 'q':
+        for i in range(len(variable_array)):
+            plt.plot(kappa, variable_array[i][:,1]+mean_e, label=rf'$\sigma={sigma[i]}$')
+            mask = (df['q'] == q) & (df['sigma'] == sigma[i])
+            plt.scatter(df['kappa'][mask], df['E'][mask])
+        plt.xlabel(rf'$\kappa$')
+        plt.title(f'q={q}')
+
+    elif variable == 'kappa' and static == 'sigma':
+        for i in range(len(variable_array)):
+            plt.plot(q, variable_array[i][:,1]+mean_e, label=rf'$\kappa={kappa[i]}$')
+            mask = (df['sigma'] == sigma) & (df['kappa'] == kappa[i])
+            plt.scatter(df['q'][mask], df['E'][mask])
+        plt.xlabel(rf'$q$')
+        plt.title(rf'$\sigma={sigma}$')
+    elif variable == 'kappa' and static == 'q':
+        for i in range(len(variable_array)):
+            plt.plot(sigma, variable_array[i][:,1]+mean_e, label=rf'$\kappa={kappa[i]}$')
+            mask = (df['q'] == q) & (df['kappa'] == kappa[i])
+            plt.scatter(df['sigma'][mask], df['E'][mask])
+        plt.xlabel(rf'$\sigma$')
+        plt.title(f'q={q}')
+
+    plt.ylabel('E')
+    # plt.legend()
+    plt.savefig(f'figures/{plot_name}.png')
+    plt.show()
 
 def plot_high_error_regions(params, error, cutoffs):
     fig = go.Figure()
